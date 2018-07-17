@@ -101,7 +101,7 @@ class Level {
             throw new Error('Объект не существует или не является объектом класса Actor');
         }
 
-        return this.actors.find(obj => obj.isIntersect(objectActor));
+        return this.actors.find(actor => actor.isIntersect(objectActor));
     }
 
     obstacleAt(positionVector, sizeVector) {
@@ -123,8 +123,9 @@ class Level {
 
         for (let x = leftBorder; x < rightBorder; x++) {
             for (let y = topBorder; y < bottomBorder; y++) {
-                if (this.grid[y][x]) {
-                    return this.grid[y][x];
+                let obstacle = this.grid[y][x];
+                if (obstacle) {
+                    return obstacle;
                 }
             }
         }
@@ -142,21 +143,21 @@ class Level {
     }
 
     noMoreActors(typeOfObject) {
-        if (this.actors.find(el => el.type === typeOfObject)) {
+        if (this.actors.find(actor => actor.type === typeOfObject)) {
             return false;
         }
 
         return true;
     }
 
-    playerTouched(typeofObject, object) {
+    playerTouched(typeOfObject, object) {
         if (this.status !== null) {
             return;
         }
-        if (typeofObject === LAVA || typeofObject === FIREBALL) {
+        if (typeOfObject === LAVA || typeOfObject === FIREBALL) {
             this.status = 'lost';
         }
-        if ( (typeofObject === COIN) && (object.type === COIN) ) {
+        if ( (typeOfObject === COIN) && (object.type === COIN) ) {
             this.removeActor(object);
                 if (this.noMoreActors(COIN)) {
                     this.status = 'won';
@@ -183,20 +184,19 @@ class LevelParser {
     }
 
     createGrid(arrayStr) {
-        return arrayStr.map(function(noMoveArray) {
-            return [...noMoveArray].map(el => STATIC_GAME_OBJECTS[el]);
+        return arrayStr.map((noMoveArray) => {
+            return [...noMoveArray].map(cell => this.obstacleFromSymbol(cell));
         });
     }
 
     createActors(arrayStr) {
-        //let self = this;
-        return arrayStr.reduce((previewElement, currentElement, Y) => {
-            [...currentElement].forEach((cell, X) => {
+        return arrayStr.reduce((previewElement, currentElement, y) => {
+            [...currentElement].forEach((cell, x) => {
                     if (cell) {
                         let constructor = this.actorFromSymbol(cell);
 
                         if (constructor && typeof(constructor) === 'function') {
-                            let objectActor = new constructor(new Vector(X, Y));
+                            let objectActor = new constructor(new Vector(x, y));
 
                             if (objectActor instanceof Actor) {
                                 previewElement.push(objectActor);
@@ -224,7 +224,7 @@ class Fireball extends Actor {
         return FIREBALL;
      }
 
-    getNextPosition(time=1) {
+    getNextPosition(time = 1) {
         return this.pos.plus(this.speed.times(time));
     }
 
@@ -288,7 +288,7 @@ class Coin extends Actor {
          return COIN;
      }
 
-    updateSpring(time =1) {
+    updateSpring(time = 1) {
         this.spring += this.springSpeed * time;
     }
 
